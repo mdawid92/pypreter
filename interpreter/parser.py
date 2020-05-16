@@ -32,6 +32,8 @@ class PyParser(Parser):
                 self.globals[stmt.target.id] *= self._execute(stmt.value)
             elif isinstance(stmt.op, ast.Div):
                 self.globals[stmt.target.id] /= self._execute(stmt.value)
+            elif isinstance(stmt.op, ast.Mod):
+                self.globals[stmt.target.id] %= self._execute(stmt.value)
             return True
         elif isinstance(stmt, ast.Num):
             return stmt.n
@@ -104,12 +106,32 @@ class PyParser(Parser):
     def testlist_star_expr(self, p):
         debug(p.test, "testlist_star_expr")
         return p.test
-# augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+    # augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
     #             '<<=' | '>>=' | '**=' | '//=')
     # PLUSEQUAL, MINEQUAL, STAREQUAL, SLASHEQUAL, PERCENTEQUAL, AMPEREQUAL, VBAREQUAL, CIRCUMFLEXEQUAL
     @_("PLUSEQUAL")
     def augassign(self, p):
         assign = ast.AugAssign(op=ast.Add())
+        debug(assign, "augassign")
+        return assign
+    @_("MINEQUAL")
+    def augassign(self, p):
+        assign = ast.AugAssign(op=ast.Sub())
+        debug(assign, "augassign")
+        return assign
+    @_("STAREQUAL")
+    def augassign(self, p):
+        assign = ast.AugAssign(op=ast.Mult())
+        debug(assign, "augassign")
+        return assign
+    @_("SLASHEQUAL")
+    def augassign(self, p):
+        assign = ast.AugAssign(op=ast.Div())
+        debug(assign, "augassign")
+        return assign
+    @_("PERCENTEQUAL")
+    def augassign(self, p):
+        assign = ast.AugAssign(op=ast.Mod())
         debug(assign, "augassign")
         return assign
 
@@ -280,6 +302,10 @@ class PyParser(Parser):
     @_('test COMMA test')
     def testlist_comp(self, p):
         return [p.test0, p.test1]
+    # TODO nie jestem pewien
+    @_('test COMMA testlist_comp')
+    def testlist_comp(self, p):
+        return [p.test] + p.testlist_comp
     # trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 
     @_('DOT NAME')
