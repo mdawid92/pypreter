@@ -45,6 +45,10 @@ class PyParser(Parser):
             return {self._execute(key): self._execute(value) for key, value in zip(stmt.keys, stmt.values)}
         elif isinstance(stmt, ast.Set):
             return {self._execute(element) for element in stmt.elts}
+        elif isinstance(stmt, ast.List):
+            return [self._execute(element) for element in stmt.elts]
+        elif isinstance(stmt, ast.Tuple):
+            return tuple(self._execute(element) for element in stmt.elts)
         elif isinstance(stmt, ast.Name):
             if isinstance(stmt.ctx, ast.Store):
                 return stmt.id
@@ -308,26 +312,24 @@ class PyParser(Parser):
     #       '[' [testlist_comp] ']' |
     #       '{' [dictorsetmaker] '}' |
     #       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
-    @_("LPAR RPAR")
+    @_("LPAR [ testlist_comp ] RPAR")
     def atom(self, p):
-        return tuple()
+        if p.testlist_comp is not None:
+            return ast.Tuple(elts=p.testlist_comp)
+        else:
+            return ast.Tuple(elts=[])
 
-    @_("LPAR testlist_comp RPAR")
+    @_("LSQB [ testlist_comp ] RSQB")
     def atom(self, p):
-        return tuple(p.testlist_comp)
-
-    @_("LSQB RSQB")
-    def atom(self, p):
-        return []
-
-    @_("LSQB testlist_comp RSQB")
-    def atom(self, p):
-        return p.testlist_comp
+        if p.testlist_comp is not None:
+            return ast.List(elts=p.testlist_comp)
+        else:
+            return ast.List(elts=[])
 
     @_("LBRACE [ dictorsetmaker ] RBRACE")
     def atom(self, p):
         debug(p.dictorsetmaker, "atom")
-        return p.dictorsetmaker
+        return p.dictorsetmaker or ast.Dict(keys=[], values=[])
 
     @_("NAME")
     def atom(self, p):
