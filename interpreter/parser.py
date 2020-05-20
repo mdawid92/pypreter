@@ -43,6 +43,8 @@ class PyParser(Parser):
             return stmt.s
         elif isinstance(stmt, ast.Dict):
             return {self._execute(key): self._execute(value) for key, value in zip(stmt.keys, stmt.values)}
+        elif isinstance(stmt, ast.Set):
+            return {self._execute(element) for element in stmt.elts}
         elif isinstance(stmt, ast.Name):
             if isinstance(stmt.ctx, ast.Store):
                 return stmt.id
@@ -394,17 +396,26 @@ class PyParser(Parser):
     def testlist(self, p):
         return [p.test0] + p.test1
 
-# dictorsetmaker: ( ((test ':' test | '**' expr)
+    # dictorsetmaker: ( ((test ':' test | '**' expr)
     #                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
     #                   ((test | star_expr)
     #                    (comp_for | (',' (test | star_expr))* [','])) )
     @_('test COLON test comp_for')
     def dictorsetmaker(self, p):
-        return ast.Dict()
+        return ast.DictComp()
+
     @_('test COLON test { COMMA test COLON test }')
     def dictorsetmaker(self, p):
-        d=ast.Dict(keys=[p.test0]+p.test2, values=[p.test1]+p.test3)
+        d = ast.Dict(keys=[p.test0] + p.test2, values=[p.test1] + p.test3)
         return d
+
+    @_('test comp_for')
+    def dictorsetmaker(self, p):
+        return ast.SetComp()
+
+    @_('test { COMMA test }')
+    def dictorsetmaker(self, p):
+        return ast.Set(elts=[p.test0] + p.test1)
 
     # arglist: argument (',' argument)*  [',']
     @_('argument { COMMA argument }')
