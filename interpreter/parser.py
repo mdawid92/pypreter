@@ -21,7 +21,9 @@ class PyParser(Parser):
                 self._execute(i)
             return True
         elif isinstance(stmt, ast.Assign):
-            self.globals[stmt.targets[0].id] = self._execute(stmt.value)
+            values = self._execute(stmt.value)
+            for i, target in enumerate(stmt.targets):
+                self.globals[target.id] = values[i]
             return True
         elif isinstance(stmt, ast.AugAssign):
             if isinstance(stmt.op, ast.Add):
@@ -96,16 +98,15 @@ class PyParser(Parser):
 
     @_('testlist_star_expr EQUAL testlist_star_expr')
     def expr_stmt(self, p):
-        print(f"expr_stmt {p.testlist_star_expr0} = {p.testlist_star_expr1}")
-        name = p.testlist_star_expr0
-        assign = ast.Assign(targets=[ast.Name(id=name.id, ctx=ast.Store())], value=p.testlist_star_expr1)
+        debug(p.testlist_star_expr0, "expr_stmt")
+        names = p.testlist_star_expr0
+        assign = ast.Assign(targets=[ast.Name(id=name.id, ctx=ast.Store()) for name in names], value=p.testlist_star_expr1)
         return assign
 
     # testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-    @_("test")
+    @_("test { COMMA test }")
     def testlist_star_expr(self, p):
-        debug(p.test, "testlist_star_expr")
-        return p.test
+        return [p.test0] + p.test1
     # augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
     #             '<<=' | '>>=' | '**=' | '//=')
     # PLUSEQUAL, MINEQUAL, STAREQUAL, SLASHEQUAL, PERCENTEQUAL, AMPEREQUAL, VBAREQUAL, CIRCUMFLEXEQUAL
@@ -299,23 +300,18 @@ class PyParser(Parser):
     @_('test comp_for')
     def testlist_comp(self, p):
         return []
-    @_('test COMMA test')
+    @_('test { COMMA test }')
     def testlist_comp(self, p):
-        return [p.test0, p.test1]
-    # TODO nie jestem pewien
-    @_('test COMMA testlist_comp')
-    def testlist_comp(self, p):
-        return [p.test] + p.testlist_comp
-    # trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+        return [p.test0] + p.test1
 
     @_('DOT NAME')
     def trailer(self, p):
         return p.NAME
 
     # subscriptlist: subscript (',' subscript)* [',']
-    @_('subscript COMMA subscript')
+    @_('subscript { COMMA subscript }')
     def subscriptlist(self, p):
-        return [p.subscript0, p.subscript1]
+        return [p.subscript0] + p.subscript1
 
     # subscript: test | [test] ':' [test] [sliceop]
     @_('test')
@@ -331,30 +327,19 @@ class PyParser(Parser):
         return p
 
     # exprlist: (expr | star_expr)(','(expr | star_expr)) * [',']
-    @_("expr")
+    @_("expr { COMMA expr }")
     def exprlist(self, p):
-        return [p.expr]
-    @_("expr COMMA expr")
-    def exprlist(self, p):
-        return [p.expr0, p.expr1]
+        return [p.expr0] + p.expr1
 
     # testlist: test (',' test)* [',']
-    @_("test")
+    @_('test { COMMA test } ')
     def testlist(self, p):
-        print(f"testlist {p.test}")
-        return p.test
-    @_('test COMMA test')
-    def testlist(self, p):
-        return [p.test0, p.test1]
+        return [p.test0] + p.test1
 
     # arglist: argument (',' argument)*  [',']
-    @_("argument")
+    @_('argument { COMMA argument }')
     def arglist(self, p):
-        return p.argument
-
-    @_('argument COMMA argument')
-    def arglist(self, p):
-        return [p.argument0, p.argument1]
+        return [p.argument0] + p.argument1
 
     # argument: ( test [comp_for] |
     #            test '=' test |
