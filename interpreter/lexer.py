@@ -91,8 +91,8 @@ class PyLexer(Lexer):
         return t
 
     def STRING(self, t):
-        tmp = ast.Str
-        tmp.s = t.value
+
+        tmp = ast.Str(s=t.value.strip("\"'"))
         t.value = tmp
         return t
 

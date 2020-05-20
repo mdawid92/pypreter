@@ -21,7 +21,7 @@ class PyParser(Parser):
                 self._execute(i)
             return True
         elif isinstance(stmt, ast.Assign):
-            values = self._execute(stmt.value)
+            values = [self._execute(value) for value in stmt.value]
             for i, target in enumerate(stmt.targets):
                 self.globals[target.id] = values[i]
             return True
@@ -39,6 +39,10 @@ class PyParser(Parser):
             return True
         elif isinstance(stmt, ast.Num):
             return stmt.n
+        elif isinstance(stmt, ast.Str):
+            return stmt.s
+        elif isinstance(stmt, ast.Dict):
+            return {self._execute(key): self._execute(value) for key, value in zip(stmt.keys, stmt.values)}
         elif isinstance(stmt, ast.Name):
             if isinstance(stmt.ctx, ast.Store):
                 return stmt.id
@@ -318,6 +322,11 @@ class PyParser(Parser):
     def atom(self, p):
         return p.testlist_comp
 
+    @_("LBRACE [ dictorsetmaker ] RBRACE")
+    def atom(self, p):
+        debug(p.dictorsetmaker, "atom")
+        return p.dictorsetmaker
+
     @_("NAME")
     def atom(self, p):
         return p.NAME
@@ -384,6 +393,18 @@ class PyParser(Parser):
     @_('test { COMMA test } ')
     def testlist(self, p):
         return [p.test0] + p.test1
+
+# dictorsetmaker: ( ((test ':' test | '**' expr)
+    #                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
+    #                   ((test | star_expr)
+    #                    (comp_for | (',' (test | star_expr))* [','])) )
+    @_('test COLON test comp_for')
+    def dictorsetmaker(self, p):
+        return ast.Dict()
+    @_('test COLON test { COMMA test COLON test }')
+    def dictorsetmaker(self, p):
+        d=ast.Dict(keys=[p.test0]+p.test2, values=[p.test1]+p.test3)
+        return d
 
     # arglist: argument (',' argument)*  [',']
     @_('argument { COMMA argument }')
