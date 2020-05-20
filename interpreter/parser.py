@@ -55,7 +55,7 @@ class PyParser(Parser):
             if isinstance(stmt.ctx, ast.Load):
                 return self.globals[stmt.id]
         else:
-            print(f"NOT IMPLEMENTED: {stmt.__class__}")
+            raise RuntimeError(f"NOT IMPLEMENTED: {stmt.__class__}")
 
     def execute(self, stmt):
         unparsed = ast.dump(stmt)
