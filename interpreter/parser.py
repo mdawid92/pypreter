@@ -67,8 +67,12 @@ class PyParser(Parser):
             return stmt.s
         elif isinstance(stmt, ast.Dict):
             return {self._execute(key): self._execute(value) for key, value in zip(stmt.keys, stmt.values)}
+        elif isinstance(stmt, ast.DictComp):
+            return {self._execute(key): self._execute(value) for key, value in self._execute(stmt.generators[1]).items()}
         elif isinstance(stmt, ast.Set):
             return {self._execute(element) for element in stmt.elts}
+        elif isinstance(stmt, ast.SetComp):
+            return {self._execute(element) for element in self._execute(stmt.generators[1])}
         elif isinstance(stmt, ast.List):
             return [self._execute(element) for element in stmt.elts]
         elif isinstance(stmt, ast.Tuple):
