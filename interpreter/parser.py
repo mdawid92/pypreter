@@ -48,13 +48,19 @@ class PyParser(Parser):
                 return self._execute(stmt.left) / self._execute(stmt.right)
             elif isinstance(stmt.op, ast.Mod):
                 return self._execute(stmt.left) % self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.BitOr):
+                return self._execute(stmt.left) or self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.BitAnd):
+                return self._execute(stmt.left) and self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.BitXor):
+                return self._execute(stmt.left) ^ self._execute(stmt.right)
         elif isinstance(stmt, ast.UnaryOp):
             if isinstance(stmt.op, ast.UAdd):
                 return + self._execute(stmt.operand)
             elif isinstance(stmt.op, ast.USub):
                 return - self._execute(stmt.operand)
             elif isinstance(stmt.op, ast.Invert):
-                return not self._execute(stmt.right)
+                return not self._execute(stmt.operand)
         elif isinstance(stmt, ast.Num):
             return stmt.n
         elif isinstance(stmt, ast.Str):
@@ -171,7 +177,7 @@ class PyParser(Parser):
     # not_test: 'not' not_test | comparison
     @_('NOT not_test')
     def not_test(self, p):
-        return ast.UnaryOp(op=ast.Invert(), operand=p.factor)
+        return ast.UnaryOp(op=ast.Invert(), operand=p.not_test)
 
     @_('comparision')
     def not_test(self, p):

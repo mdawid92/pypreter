@@ -16,10 +16,16 @@ class PyLexer(Lexer):
     NEWLINE = r'\n'
     ENDMARKER = r'\n\Z'
     NUMBER = r'\d+'  # TODO: only int now
-    NOT = r'NOT'
+    NOT = r'not'
     AND = r'and'
     OR = r'or'
+    TRUE = r'True'
+    FALSE = r'False'
+    NONE = r'None'
+    FOR = r"for"
+    IN = r"in"
     NAME = r'\w+'
+
     STRING = r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"'  # TODO: only " type of string
     # INDENT = 5
     # DEDENT = 6
@@ -74,24 +80,20 @@ class PyLexer(Lexer):
     # N_TOKENS = 57
     # NT_OFFSET = 256
 
-    FOR = r"for"
-    IN = r"in"
 
-    @_(r"None")
     def NONE(self, t):
         t.value = None
         return t
-    @_(r"True")
+
     def TRUE(self, t):
         t.value = True
         return t
-    @_(r"False")
+
     def FALSE(self, t):
         t.value = False
         return t
 
     def STRING(self, t):
-
         tmp = ast.Str(s=t.value.strip("\"'"))
         t.value = tmp
         return t
