@@ -1,5 +1,5 @@
 from sly import Lexer
-import token
+
 import ast
 
 
@@ -7,9 +7,12 @@ def group(*choices): return '(' + '|'.join(choices) + ')'
 
 
 class PyLexer(Lexer):
-    tokens = {ENDMARKER, NAME, NUMBER, STRING, NEWLINE, LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI, PLUS, MINUS, STAR, SLASH,
-              VBAR, AMPER, LESS, LESSEQUAL, GREATER, GREATEREQUAL, EQUAL, DOT, PERCENT, LBRACE, RBRACE, EQEQUAL, NOTEQUAL, TILDE, CIRCUMFLEX,
-              DOUBLESTAR, PLUSEQUAL, MINEQUAL, STAREQUAL, SLASHEQUAL, PERCENTEQUAL, AMPEREQUAL, VBAREQUAL, CIRCUMFLEXEQUAL,
+    tokens = {ENDMARKER, NAME, NUMBER, STRING, NEWLINE, LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI, PLUS, MINUS, STAR,
+              SLASH,
+              VBAR, AMPER, LESS, LESSEQUAL, GREATER, GREATEREQUAL, EQUAL, DOT, PERCENT, LBRACE, RBRACE, EQEQUAL,
+              NOTEQUAL, TILDE, CIRCUMFLEX,
+              DOUBLESTAR, PLUSEQUAL, MINEQUAL, STAREQUAL, SLASHEQUAL, PERCENTEQUAL, AMPEREQUAL, VBAREQUAL,
+              CIRCUMFLEXEQUAL,
               NONE, FALSE, TRUE, NOT, AND, OR, FOR, IN, IF, ELSE}
     ignore = '\t '
 
@@ -82,7 +85,6 @@ class PyLexer(Lexer):
     # N_TOKENS = 57
     # NT_OFFSET = 256
 
-
     def NONE(self, t):
         t.value = None
         return t
@@ -109,4 +111,3 @@ class PyLexer(Lexer):
         tmp = ast.Name(id=t.value, ctx=ast.Load())
         t.value = tmp
         return t
-
