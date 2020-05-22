@@ -79,39 +79,16 @@ class PyParser(Parser):
         unparsed = ast.dump(stmt)
         print(unparsed)
 
-        print(self._execute(stmt))
+        self._execute(stmt)
         print(self.globals)
         print(self.locals)
-
-        # codeobj = compile(stmt, '<string>', 'exec')
-        # exec(codeobj, self.globals, locals())
 
     def error(self, token):
         super().error(token)
 
-    # @_('NEWLINE')
-    # def single_input(self, p):
-    #     return None
-
-    # @_('simple_stmt')
-    # def single_input(self, p):
-    #     return p.simple_stmt
-
-    # @_('compound_stmt NEWLINE')
-    # def single_input(self, p):
-    #     return p.compound_stmt
-
-    # stmt: simple_stmt | compound_stmt
-    # simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
-    # @_('small_stmt NEWLINE')
-    # def simple_stmt(self, p):
-    #     return p.small_stmt
-    # small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
-    #              import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
     @_('expr_stmt')
     def small_stmt(self, p):
         mod = ast.Module(body=[p.expr_stmt])
-        print(f"small_stmt {mod}")
         self.execute(mod)
         return mod
 
@@ -130,7 +107,6 @@ class PyParser(Parser):
 
     @_('testlist_star_expr EQUAL testlist_star_expr')
     def expr_stmt(self, p):
-        debug(p.testlist_star_expr0, "expr_stmt")
         names = p.testlist_star_expr0
         assign = ast.Assign(
             targets=[ast.Name(id=name.id, ctx=ast.Store()) for name in names],
@@ -148,38 +124,27 @@ class PyParser(Parser):
     # PLUSEQUAL, MINEQUAL, STAREQUAL, SLASHEQUAL, PERCENTEQUAL, AMPEREQUAL, VBAREQUAL, CIRCUMFLEXEQUAL
     @_("PLUSEQUAL")
     def augassign(self, p):
-        assign = ast.AugAssign(op=ast.Add())
-        debug(assign, "augassign")
-        return assign
+        return ast.AugAssign(op=ast.Add())
 
     @_("MINEQUAL")
     def augassign(self, p):
-        assign = ast.AugAssign(op=ast.Sub())
-        debug(assign, "augassign")
-        return assign
+        return ast.AugAssign(op=ast.Sub())
 
     @_("STAREQUAL")
     def augassign(self, p):
-        assign = ast.AugAssign(op=ast.Mult())
-        debug(assign, "augassign")
-        return assign
+        return ast.AugAssign(op=ast.Mult())
 
     @_("SLASHEQUAL")
     def augassign(self, p):
-        assign = ast.AugAssign(op=ast.Div())
-        debug(assign, "augassign")
-        return assign
+        return ast.AugAssign(op=ast.Div())
 
     @_("PERCENTEQUAL")
     def augassign(self, p):
-        assign = ast.AugAssign(op=ast.Mod())
-        debug(assign, "augassign")
-        return assign
+        return ast.AugAssign(op=ast.Mod())
 
     # test: or_test ['if' or_test 'else' test] | lambdef
     @_('or_test')
     def test(self, p):
-        print(f"test {p.or_test}")
         return p.or_test
 
     # test_nocond: or_test | lambdef_nocond
@@ -215,7 +180,6 @@ class PyParser(Parser):
     # comparison: expr (comp_op expr)*
     @_('expr')
     def comparision(self, p):
-        print(f"comparision {p.expr}")
         return p.expr
 
     @_('expr LESS expr')
@@ -231,7 +195,6 @@ class PyParser(Parser):
     # expr: xor_expr ('|' xor_expr)*
     @_('xor_expr')
     def expr(self, p):
-        print(f"expr {p.xor_expr}")
         return p.xor_expr
 
     @_('xor_expr VBAR xor_expr')
@@ -241,7 +204,6 @@ class PyParser(Parser):
     # xor_expr: and_expr ('^' and_expr)*
     @_('and_expr')
     def xor_expr(self, p):
-        debug(p.and_expr, "xor_expr")
         return p.and_expr
 
     @_('and_expr CIRCUMFLEX and_expr')
@@ -252,7 +214,6 @@ class PyParser(Parser):
     # and_expr: arith_expr ('&' arith_expr)*
     @_('arith_expr')
     def and_expr(self, p):
-        debug(p.arith_expr, "and_expr")
         return p.arith_expr
 
     @_('arith_expr AMPER arith_expr')
@@ -273,7 +234,6 @@ class PyParser(Parser):
 
     @_('term')
     def arith_expr(self, p):
-        debug(p.term, "arith_expr")
         return p.term
 
     # term: factor (('*'|'@'|'/'|'%'|'//') factor)*
@@ -291,7 +251,6 @@ class PyParser(Parser):
 
     @_("factor")
     def term(self, p):
-        debug(p.factor, "term")
         return p.factor
 
     # factor: ('+'|'-'|'~') factor | power
@@ -309,13 +268,11 @@ class PyParser(Parser):
 
     @_('power')
     def factor(self, p):
-        debug(p.power, "factor")
         return p.power
 
     # power: atom_expr ['**' factor]
     @_('atom_expr')
     def power(self, p):
-        debug(p.atom_expr, "power")
         return p.atom_expr
 
     # atom_expr: [AWAIT] atom trailer*
@@ -325,7 +282,6 @@ class PyParser(Parser):
 
     @_('atom')
     def atom_expr(self, p):
-        debug(p.atom, "atom expr")
         return p.atom
 
     # atom: ('(' [yield_expr|testlist_comp] ')' |
@@ -348,7 +304,6 @@ class PyParser(Parser):
 
     @_("LBRACE [ dictorsetmaker ] RBRACE")
     def atom(self, p):
-        debug(p.dictorsetmaker, "atom")
         return p.dictorsetmaker or ast.Dict(keys=[], values=[])
 
     @_("NAME")
@@ -361,7 +316,6 @@ class PyParser(Parser):
 
     @_("STRING")
     def atom(self, p):
-        debug(p.STRING, "atom")
         return p.STRING
 
     @_('NONE')
@@ -424,7 +378,7 @@ class PyParser(Parser):
     #                    (comp_for | (',' (test | star_expr))* [','])) )
     @_('test COLON test comp_for')
     def dictorsetmaker(self, p):
-        return ast.DictComp()
+        return ast.DictComp(key=p.test0, value=p.test1, generators=p.comp_for)
 
     @_('test COLON test { COMMA test COLON test }')
     def dictorsetmaker(self, p):
@@ -433,7 +387,7 @@ class PyParser(Parser):
 
     @_('test comp_for')
     def dictorsetmaker(self, p):
-        return ast.SetComp()
+        return ast.SetComp(elt=p.test, generators=p.comp_for)
 
     @_('test { COMMA test }')
     def dictorsetmaker(self, p):

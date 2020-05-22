@@ -99,12 +99,10 @@ class PyLexer(Lexer):
     def NUMBER(self, t):
         tmp = ast.Num(n=int(t.value))
         t.value = tmp
-        print(t)
         return t
 
     def NAME(self, t):
         tmp = ast.Name(id=t.value, ctx=ast.Load())
         t.value = tmp
-        print(t)
         return t
 
