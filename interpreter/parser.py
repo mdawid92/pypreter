@@ -20,6 +20,8 @@ class PyParser(Parser):
             for i in stmt.body:
                 self._execute(i)
             return True
+        if isinstance(stmt, ast.IfExp):
+            return self._execute(stmt.body) if self._execute(stmt.test) else self._execute(stmt.orelse)
         elif isinstance(stmt, ast.Assign):
             values = [self._execute(value) for value in stmt.value]
             for i, target in enumerate(stmt.targets):
@@ -61,6 +63,23 @@ class PyParser(Parser):
                 return - self._execute(stmt.operand)
             elif isinstance(stmt.op, ast.Invert):
                 return not self._execute(stmt.operand)
+        elif isinstance(stmt, ast.Compare):
+            tmp = []
+            items = [self._execute(stmt.left)] + [self._execute(i) for i in stmt.comparators]
+            for i, op in enumerate(stmt.ops):
+                if isinstance(op, ast.Lt):
+                    tmp.append(items[i] < items[i + 1])
+                if isinstance(op, ast.LtE):
+                    tmp.append(items[i] <= items[i + 1])
+                if isinstance(op, ast.Gt):
+                    tmp.append(items[i] > items[i + 1])
+                if isinstance(op, ast.GtE):
+                    tmp.append(items[i] >= items[i + 1])
+                if isinstance(op, ast.Eq):
+                    tmp.append(items[i] == items[i + 1])
+                if isinstance(op, ast.NotEq):
+                    tmp.append(items[i] != items[i + 1])
+            return all(tmp)
         elif isinstance(stmt, ast.Num):
             return stmt.n
         elif isinstance(stmt, ast.Str):
@@ -68,7 +87,8 @@ class PyParser(Parser):
         elif isinstance(stmt, ast.Dict):
             return {self._execute(key): self._execute(value) for key, value in zip(stmt.keys, stmt.values)}
         elif isinstance(stmt, ast.DictComp):
-            return {self._execute(key): self._execute(value) for key, value in self._execute(stmt.generators[1]).items()}
+            return {self._execute(key): self._execute(value) for key, value in
+                    self._execute(stmt.generators[1]).items()}
         elif isinstance(stmt, ast.Set):
             return {self._execute(element) for element in stmt.elts}
         elif isinstance(stmt, ast.SetComp):
@@ -157,6 +177,10 @@ class PyParser(Parser):
     def test(self, p):
         return p.or_test
 
+    @_('or_test IF or_test ELSE test')
+    def test(self, p):
+        return ast.IfExp(body=p.or_test0, orelse=p.test, test=p.or_test1)
+
     # test_nocond: or_test | lambdef_nocond
     # lambdef: 'lambda' [varargslist] ':' test
     # lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
@@ -192,11 +216,35 @@ class PyParser(Parser):
     def comparision(self, p):
         return p.expr
 
-    @_('expr LESS expr')
+    @_('expr { comp_op expr }')
     def comparision(self, p):
-        return ast.BinOp(left=p.expr1, op=ast.Lt, right=p.expr1)
+        return ast.Compare(left=p.expr0, ops=p.comp_op, comparators=p.expr1)
 
     # comp_op: '<'|'>'|'=='|'>='|'<='|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+    @_('LESS')
+    def comp_op(self, p):
+        return ast.Lt()
+
+    @_('LESSEQUAL')
+    def comp_op(self, p):
+        return ast.LtE()
+
+    @_('GREATER')
+    def comp_op(self, p):
+        return ast.Gt()
+
+    @_('GREATEREQUAL')
+    def comp_op(self, p):
+        return ast.GtE()
+
+    @_('EQEQUAL')
+    def comp_op(self, p):
+        return ast.Eq()
+
+    @_('NOTEQUAL')
+    def comp_op(self, p):
+        return ast.NotEq()
+
     # star_expr: '*' expr
     @_('STAR expr')
     def star_expr(self, p):
@@ -420,6 +468,7 @@ class PyParser(Parser):
     # comp_for: 'for' exprlist 'in' or_test [comp_iter]
     @_("FOR exprlist IN or_test")
     def comp_for(self, p):
+        ast.comprehension
         return (p.exprlist, p.or_test)
     # comp_if: 'if' test_nocond [comp_iter]
 

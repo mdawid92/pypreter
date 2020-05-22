@@ -8,9 +8,9 @@ def group(*choices): return '(' + '|'.join(choices) + ')'
 
 class PyLexer(Lexer):
     tokens = {ENDMARKER, NAME, NUMBER, STRING, NEWLINE, LPAR, RPAR, LSQB, RSQB, COLON, COMMA, SEMI, PLUS, MINUS, STAR, SLASH,
-              VBAR, AMPER, LESS, GREATER, EQUAL, DOT, PERCENT, LBRACE, RBRACE, EQEQUAL, NOTEQUAL, TILDE, CIRCUMFLEX,
+              VBAR, AMPER, LESS, LESSEQUAL, GREATER, GREATEREQUAL, EQUAL, DOT, PERCENT, LBRACE, RBRACE, EQEQUAL, NOTEQUAL, TILDE, CIRCUMFLEX,
               DOUBLESTAR, PLUSEQUAL, MINEQUAL, STAREQUAL, SLASHEQUAL, PERCENTEQUAL, AMPEREQUAL, VBAREQUAL, CIRCUMFLEXEQUAL,
-              NONE, FALSE, TRUE, NOT, AND, OR, FOR, IN}
+              NONE, FALSE, TRUE, NOT, AND, OR, FOR, IN, IF, ELSE}
     ignore = '\t '
 
     NEWLINE = r'\n'
@@ -24,6 +24,8 @@ class PyLexer(Lexer):
     NONE = r'None'
     FOR = r"for"
     IN = r"in"
+    IF = r'if'
+    ELSE = r'else'
     NAME = r'\w+'
 
     STRING = r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"'  # TODO: only " type of string
@@ -42,8 +44,8 @@ class PyLexer(Lexer):
     RBRACE = r'}'
     EQEQUAL = r'=='
     NOTEQUAL = r'!='
-    # LESSEQUAL = r'<='
-    # GREATEREQUAL = r'>='
+    LESSEQUAL = r'<='
+    GREATEREQUAL = r'>='
     TILDE = r'~'
     CIRCUMFLEX = r'\^'
     DOUBLESTAR = r'\*\*'
