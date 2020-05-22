@@ -37,6 +37,24 @@ class PyParser(Parser):
             elif isinstance(stmt.op, ast.Mod):
                 self.globals[stmt.target.id] %= self._execute(stmt.value)
             return True
+        elif isinstance(stmt, ast.BinOp):
+            if isinstance(stmt.op, ast.Add):
+                return self._execute(stmt.left) + self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.Sub):
+                return self._execute(stmt.left) - self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.Mult):
+                return self._execute(stmt.left) * self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.Div):
+                return self._execute(stmt.left) / self._execute(stmt.right)
+            elif isinstance(stmt.op, ast.Mod):
+                return self._execute(stmt.left) % self._execute(stmt.right)
+        elif isinstance(stmt, ast.UnaryOp):
+            if isinstance(stmt.op, ast.UAdd):
+                return + self._execute(stmt.operand)
+            elif isinstance(stmt.op, ast.USub):
+                return - self._execute(stmt.operand)
+            elif isinstance(stmt.op, ast.Invert):
+                return not self._execute(stmt.right)
         elif isinstance(stmt, ast.Num):
             return stmt.n
         elif isinstance(stmt, ast.Str):
@@ -188,7 +206,7 @@ class PyParser(Parser):
     # not_test: 'not' not_test | comparison
     @_('NOT not_test')
     def not_test(self, p):
-        return ast.UnaryOp(op=ast.Invert, operand=p.factor)
+        return ast.UnaryOp(op=ast.Invert(), operand=p.factor)
 
     @_('comparision')
     def not_test(self, p):
@@ -204,9 +222,7 @@ class PyParser(Parser):
     def comparision(self, p):
         return ast.BinOp(left=p.expr1, op=ast.Lt, right=p.expr1)
 
-    # <> isn't actually a valid comparison operator in Python. It's here for the
-    # sake of a __future__ import described in PEP 401 (which really works :-)
-    # comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+    # comp_op: '<'|'>'|'=='|'>='|'<='|'!='|'in'|'not' 'in'|'is'|'is' 'not'
     # star_expr: '*' expr
     @_('STAR expr')
     def star_expr(self, p):
@@ -269,6 +285,10 @@ class PyParser(Parser):
     def term(self, p):
         return ast.BinOp(left=p.factor0, op=ast.Div(), right=p.factor1)
 
+    @_("factor PERCENT factor")
+    def term(self, p):
+        return ast.BinOp(left=p.factor0, op=ast.Mod(), right=p.factor1)
+
     @_("factor")
     def term(self, p):
         debug(p.factor, "term")
@@ -277,15 +297,15 @@ class PyParser(Parser):
     # factor: ('+'|'-'|'~') factor | power
     @_('PLUS factor')
     def factor(self, p):
-        return ast.UnaryOp(op=ast.UAdd, operand=p.factor)
+        return ast.UnaryOp(op=ast.UAdd(), operand=p.factor)
 
     @_('MINUS factor')
     def factor(self, p):
-        return ast.UnaryOp(op=ast.USub, operand=p.factor)
+        return ast.UnaryOp(op=ast.USub(), operand=p.factor)
 
     @_('TILDE factor')
     def factor(self, p):
-        return ast.UnaryOp(op=ast.Invert, operand=p.factor)
+        return ast.UnaryOp(op=ast.Invert(), operand=p.factor)
 
     @_('power')
     def factor(self, p):
