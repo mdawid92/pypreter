@@ -18,7 +18,7 @@ class PyLexer(Lexer):
 
     NEWLINE = r'\n'
     ENDMARKER = r'\n\Z'
-    NUMBER = r'\d+'  # TODO: only int now
+    NUMBER = r'[\+-]?[0-9]*[\.]?[0-9]+([eE][\+-]?[0-9]+)?'
     NOT = r'not'
     AND = r'and'
     OR = r'or'
@@ -31,7 +31,7 @@ class PyLexer(Lexer):
     ELSE = r'else'
     NAME = r'\w+'
 
-    STRING = r'"[^\n"\\]*(?:\\.[^\n"\\]*)*"'  # TODO: only " type of string
+    STRING = r'("|\')[^\n"\\]*(?:\\.[^\n"\\]*)*("|\')'  # TODO: only " type of string
     # INDENT = 5
     # DEDENT = 6
     LPAR = r'\('
@@ -103,8 +103,12 @@ class PyLexer(Lexer):
         return t
 
     def NUMBER(self, t):
-        tmp = ast.Num(n=int(t.value))
-        t.value = tmp
+        if str(t).find('.'):
+          tmp = ast.Num(n=float(t.value))
+          t.value = tmp
+        else:
+          tmp = ast.Num(n=int(t.value))
+          t.value = tmp
         return t
 
     def NAME(self, t):
