@@ -103,7 +103,7 @@ class PyLexer(Lexer):
         return t
 
     def NUMBER(self, t):
-        if str(t).find('.'):
+        if '.' in t.value:
           tmp = ast.Num(n=float(t.value))
           t.value = tmp
         else:
