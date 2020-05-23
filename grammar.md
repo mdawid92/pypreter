@@ -84,19 +84,17 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-subscriptlist: subscript (',' subscript)* [',']
+subscriptlist: subscript (',' subscript)* 
 subscript: test | [test] ':' [test] [sliceop]
 sliceop: ':' [test]
-exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
-testlist: test (',' test)* [',']
-dictorsetmaker: ( ((test ':' test | '**' expr)
-                   (comp_for | (',' (test ':' test | '**' expr))* [','])) |
-                  ((test | star_expr)
-                   (comp_for | (',' (test | star_expr))* [','])) )
+exprlist: (expr|star_expr) (',' (expr|star_expr))*
+testlist: test (',' test)* 
+dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* )) |
+                  (test (comp_for | (',' test)* )) )
 
 classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
 
-arglist: argument (',' argument)*  [',']
+arglist: argument (',' argument)* 
 
 argument: ( test [comp_for] |
             test '=' test |

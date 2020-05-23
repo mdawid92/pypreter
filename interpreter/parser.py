@@ -401,7 +401,7 @@ class PyParser(Parser):
     def trailer(self, p):
         return p.NAME
 
-    # subscriptlist: subscript (',' subscript)* [',']
+    # subscriptlist: subscript (',' subscript)*
     @_('subscript { COMMA subscript }')
     def subscriptlist(self, p):
         return [p.subscript0] + p.subscript1
@@ -420,20 +420,18 @@ class PyParser(Parser):
     def sliceop(self, p):
         return p
 
-    # exprlist: (expr | star_expr)(','(expr | star_expr)) * [',']
+    # exprlist: (expr | star_expr)(','(expr | star_expr)) *
     @_("expr { COMMA expr }")
     def exprlist(self, p):
         return [p.expr0] + p.expr1
 
-    # testlist: test (',' test)* [',']
+    # testlist: test (',' test)*
     @_('test { COMMA test } ')
     def testlist(self, p):
         return [p.test0] + p.test1
 
-    # dictorsetmaker: ( ((test ':' test | '**' expr)
-    #                    (comp_for | (',' (test ':' test | '**' expr))* [','])) |
-    #                   ((test | star_expr)
-    #                    (comp_for | (',' (test | star_expr))* [','])) )
+    # dictorsetmaker: ( (test ':' test  (comp_for | (',' test ':' test)* )) |
+    #                   ( test (comp_for | (',' test)* )) )
     @_('test COLON test comp_for')
     def dictorsetmaker(self, p):
         return ast.DictComp(key=p.test0, value=p.test1, generators=p.comp_for)
@@ -451,7 +449,7 @@ class PyParser(Parser):
     def dictorsetmaker(self, p):
         return ast.Set(elts=[p.test0] + p.test1)
 
-    # arglist: argument (',' argument)*  [',']
+    # arglist: argument (',' argument)*
     @_('argument { COMMA argument }')
     def arglist(self, p):
         return [p.argument0] + p.argument1
